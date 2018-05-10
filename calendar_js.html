@@ -54,6 +54,9 @@
                     <label for="countryCode">Country Code:</label>
                     <input type="text" class="form-control" placeholder="String CODE" id="countryCode" value="" required>
                 </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" id="calendarButton">Graph Calendar</button>
+                </div>
             </div>
             <div class="col-sm-9">
                 <div class="row" id="calendar">
@@ -80,15 +83,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
     <script>
-        var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        // Global Variables
         var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
         var calendar = $('#calendar');
         var daysWeekTemplate = $('#daysWeekTemplate');
         
+        // Document Ready
         $( document ).ready(function() {
             makeYearOptions();
         });
         
+        //Functions
+        // Function for make the year Select options
         var makeYearOptions = function () {
             let yearSelect = $('#year');
             for (i = 1900; i < 2050; i += 1) {
@@ -98,6 +104,7 @@
             };
         }; 
         
+        // Function that gets the data input from the user
         var getFormDates = function () {
             var daysWeekTemplate = $('#daysWeekTemplate');
             var year = parseInt($('#year').val());
@@ -108,11 +115,12 @@
             initDate = new Date(year, month, day);
             lastDate = new Date(year, month, day + numberDays -1);
 
-            console.log([initDate, lastDate]);
+            //console.log([initDate, lastDate]);
 
             return [initDate, lastDate];
         };
 
+        // Function that clean previous calendar and handle the two cases for graph the calendar
         var graphCalendar = function () {
             let dates = getFormDates();
             let initDate = dates[0];
@@ -123,11 +131,14 @@
             let lastYear = lastDate.getYear();
             let lastMonth = lastDate.getMonth();
 
+            // Clean previous calendar
             calendar.html('');
 
             if (initYear == lastYear && initMonth == lastMonth) {
+                // Case 1 => just one month
                 graphOneMonth(initDate, lastDate);
             } else {
+                // Case 2 => Several months
                 graphMonths(initDate, lastDate);
             }
         }
@@ -144,30 +155,31 @@
             var dayChild = $('<div />', { attr : { class: 'col-sm text-center'  }  });
             var daysRow;
 
+            // Month header
             let monthName = $('<div />', { attr : { class: 'row month-name' }  });
             let child = $('<div />', { attr : { class: 'col-sm text-center' }  });
             child.html(String(initMonth) + ' ' + String(initYear));
             monthName.html(child);
             
+            // Make an array with the days to print, if the day doesnt have to be printed will be a 0 instead
             for (i = 0; i < initDay; i += 1) {
                 datesArray.push(0);
             }
-
             while (date <= lastDate) {
                 datesArray.push(date.getDate());
 
                 date = new Date(date);
                 date.setDate(date.getDate() + 1);
             }
-
             if (lastDay != 6) {
                 for (i = lastDay; i < 6; i += 1) {
                     datesArray.push(0);
                 }
             }
 
-            console.log(datesArray);
+            //console.log(datesArray);
 
+            // Reading the dastesArray will make the Days Html output
             for (i = 0; i < datesArray.length; i += 1) {
                 let res = (i+1) % 7;
                 //console.log(res);
@@ -178,7 +190,9 @@
                 day = dayChild.clone();
                 
                 if (datesArray[i] != 0) {
+                    // Just show the number when applies
                     day.html(datesArray[i]);
+                    // Adding styles
                     if (res == 1 || res == 0 ) {
                         day.addClass('weekend');
                     } else {
@@ -195,6 +209,7 @@
                 }
             }
 
+            // Compile the all the month HTML and render in the Web Site
             let month = $('<div />', { attr : { class: 'col-sm-6' }  });
             month.html(daysWeekTemplate.html());
             month.append(monthName);
@@ -202,6 +217,33 @@
             calendar.append(month);
 
         }
+
+        // Function for graph more than one month case
+        var graphMonths = function (initDate,lastDate) {
+            let date = initDate;
+            
+            while (date < lastDate) {
+                let year = date.getFullYear();
+                let month = date.getMonth();
+                let lastDateMonth = new Date(year, month + 1, 0);
+                let lastDateToGrapg;
+
+                if (lastDateMonth < lastDate) {
+                    lastDateToGrapg = lastDateMonth;
+                } else {
+                    lastDateToGrapg = lastDate;
+                }
+
+                graphOneMonth(date, lastDateToGrapg);
+
+                date = new Date(year, month + 1, 1);
+            }
+        }
+
+        // Events
+        $('#calendarButton').on('click', function (e) {
+            graphCalendar();
+        });
 
     </script>
   </body>
