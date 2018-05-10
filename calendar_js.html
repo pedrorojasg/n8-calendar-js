@@ -11,6 +11,11 @@
     <title>Calendar N8</title>
 </head>
 <body>
+    <style>
+        .weekend {color:black;background-color: yellow}
+        .weekday {color:black;background-color: #9bffa4}
+        .nullday {color:black;background-color: gray}
+    </style>
     <h1>Calendar</h1>
     <div class="container">
         <div class="row">
@@ -50,28 +55,22 @@
                     <input type="text" class="form-control" placeholder="String CODE" id="countryCode" value="" required>
                 </div>
             </div>
-            <div class="col-sm-9" id="calendar">
-                <div class="row">
-
+            <div class="col-sm-9">
+                <div class="row" id="calendar">
                 </div>
             </div>
         </div>
     </div>
 
-<template id="monthTemplate">
-    <div class="col-sm-4">
-        <div class="row days-week">
-            <div class="col-sm">S</div>
-            <div class="col-sm">M</div>
-            <div class="col-sm">T</div>
-            <div class="col-sm">W</div>
-            <div class="col-sm">T</div>
-            <div class="col-sm">F</div>
-            <div class="col-sm">S</div>
-        </div>
-        <div class="row month-name">
-            <div class="col-sm text-center">Mes</div>
-        </div>
+<template id="daysWeekTemplate">
+    <div class="row days-week">
+        <div class="col-sm text-center">S</div>
+        <div class="col-sm text-center">M</div>
+        <div class="col-sm text-center">T</div>
+        <div class="col-sm text-center">W</div>
+        <div class="col-sm text-center">T</div>
+        <div class="col-sm text-center">F</div>
+        <div class="col-sm text-center">S</div>
     </div>
 </template>
 
@@ -81,6 +80,128 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
     <script>
+        var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        var calendar = $('#calendar');
+        var daysWeekTemplate = $('#daysWeekTemplate');
+        
+        $( document ).ready(function() {
+            makeYearOptions();
+        });
+        
+        var makeYearOptions = function () {
+            let yearSelect = $('#year');
+            for (i = 1900; i < 2050; i += 1) {
+                child = $('<option />', { attr : { value: i }  });
+                child.html(i);
+                yearSelect.append(child);
+            };
+        }; 
+        
+        var getFormDates = function () {
+            var daysWeekTemplate = $('#daysWeekTemplate');
+            var year = parseInt($('#year').val());
+            var month = parseInt($('#month').val());
+            var day = parseInt($('#day').val());
+            var numberDays = parseInt($('#numberDays').val());
+
+            initDate = new Date(year, month, day);
+            lastDate = new Date(year, month, day + numberDays -1);
+
+            console.log([initDate, lastDate]);
+
+            return [initDate, lastDate];
+        };
+
+        var graphCalendar = function () {
+            let dates = getFormDates();
+            let initDate = dates[0];
+            let lastDate = dates[1];
+
+            let initYear = initDate.getYear();
+            let initMonth = initDate.getMonth();
+            let lastYear = lastDate.getYear();
+            let lastMonth = lastDate.getMonth();
+
+            calendar.html('');
+
+            if (initYear == lastYear && initMonth == lastMonth) {
+                graphOneMonth(initDate, lastDate);
+            } else {
+                graphMonths(initDate, lastDate);
+            }
+        }
+
+        var graphOneMonth = function (initDate,lastDate) {
+            let initMonth = months[ initDate.getMonth() ];
+            let initYear = initDate.getFullYear();
+            let initDay = initDate.getDay();
+            let lastDay = lastDate.getDay();
+            let date = initDate;
+            let datesArray = [];
+            var daysTemplate = $('<div />');
+            var daysRowTemplate = $('<div />', { attr : { class: 'row days' }  });
+            var dayChild = $('<div />', { attr : { class: 'col-sm text-center'  }  });
+            var daysRow;
+
+            let monthName = $('<div />', { attr : { class: 'row month-name' }  });
+            let child = $('<div />', { attr : { class: 'col-sm text-center' }  });
+            child.html(String(initMonth) + ' ' + String(initYear));
+            monthName.html(child);
+            
+            for (i = 0; i < initDay; i += 1) {
+                datesArray.push(0);
+            }
+
+            while (date <= lastDate) {
+                datesArray.push(date.getDate());
+
+                date = new Date(date);
+                date.setDate(date.getDate() + 1);
+            }
+
+            if (lastDay != 6) {
+                for (i = lastDay; i < 6; i += 1) {
+                    datesArray.push(0);
+                }
+            }
+
+            console.log(datesArray);
+
+            for (i = 0; i < datesArray.length; i += 1) {
+                let res = (i+1) % 7;
+                //console.log(res);
+                if (res == 1 ) {
+                    daysRow = daysRowTemplate.clone();
+                }
+
+                day = dayChild.clone();
+                
+                if (datesArray[i] != 0) {
+                    day.html(datesArray[i]);
+                    if (res == 1 || res == 0 ) {
+                        day.addClass('weekend');
+                    } else {
+                        day.addClass('weekday');
+                    }
+                } else {
+                    day.addClass('nullday');
+                }
+
+                daysRow.append(day);
+
+                if (res == 6 ) {
+                    daysTemplate.append(daysRow);
+                }
+            }
+
+            let month = $('<div />', { attr : { class: 'col-sm-6' }  });
+            month.html(daysWeekTemplate.html());
+            month.append(monthName);
+            month.append(daysTemplate);
+            calendar.append(month);
+
+        }
 
     </script>
   </body>
